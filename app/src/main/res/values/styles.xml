@@ -7,5 +7,8 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
+    <style name="TextAppearance.FontPath" parent="android:TextAppearance">
+        <item name="fontPath">fonts/RobotoSlab-Regular.ttf</item>
+    </style>
 
 </resources>

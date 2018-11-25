@@ -7,6 +7,16 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +29,9 @@ import io.github.inflationx.viewpump.ViewPumpContextWrapper;
 
 public class MainActivity extends AppCompatActivity {
 
+    private final String JSON_URL = "https://gist.githubusercontent.com/aws1994/f583d54e5af8e56173492d3f60dd5ebf/raw/c7796ba51d5a0d37fc756cf0fd14e54434c547bc/anime.json";
+    private JsonArrayRequest request;
+    private RequestQueue requestQueue;
     private List<Books> booksList = new ArrayList<>();
     private RecyclerView recyclerView;
     private BookAdapter mAdapter;
@@ -42,31 +55,53 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-
-
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
+        jsonRequest();
+    }
+
+    private void jsonRequest(){
+        request = new JsonArrayRequest(JSON_URL, new Response.Listener<JSONArray>() {
+
+            @Override
+            public void onResponse(JSONArray response) {
+                JSONObject jsonObject = null;
+
+                for(int i = 0; i < response.length(); i++){
+
+                    try {
+                        jsonObject = response.getJSONObject(i);
+                        Books books = new Books();
+                        books.setTitle(jsonObject.getString("name"));
+                        books.setGenre(jsonObject.getString("Rating"));
+                        books.setWriter(jsonObject.getString("studio"));
+                        books.setImgUrl(jsonObject.getString("img"));
+                        booksList.add(books);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+                setupRecyclerView(booksList);
+            }
+        }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+        });
+
+        requestQueue = Volley.newRequestQueue(MainActivity.this);
+        requestQueue.add(request);
+    }
+
+    private void setupRecyclerView(List<Books> booksList){
         mAdapter = new BookAdapter(this, booksList);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(mLayoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(mAdapter);
-
-        prepareBookData();
     }
 
-    private  void prepareBookData(){
-        Books books = new Books("Harry Potter: the Goblet of Fire", "Fantasy", "J. K Rowling", "https://media.bloomsbury.com/rep/bj/9783551354044.jpg");
-        booksList.add(books);
-
-        books = new Books("Angle and Demon", "Action", "Dan Brown", "https://images-na.ssl-images-amazon.com/images/I/81-%2BZ-hkITL.jpg");
-        booksList.add(books);
-
-        books = new Books("Call Me by Your Name", "Fantasy", "André Aciman", "https://images-na.ssl-images-amazon.com/images/I/41VeOj88kYL._SY450_.jpg");
-        booksList.add(books);
-
-        mAdapter.notifyDataSetChanged();
-
-    }
 
 }
